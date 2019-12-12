@@ -1093,6 +1093,9 @@ static int shiftfs_open(struct inode *inode, struct file *file)
 {
 	struct file *realfile;
 
+	/* No longer need these flags, so don't pass them on to underlying fs */
+	file->f_flags &= ~(O_CREAT | O_EXCL | O_NOCTTY | O_TRUNC);
+
 	realfile = shiftfs_open_realfile(file, inode->i_private);
 	if (IS_ERR(realfile))
 		return PTR_ERR(realfile);
