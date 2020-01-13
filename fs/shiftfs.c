@@ -792,12 +792,26 @@ static int shiftfs_getattr(const struct path *path, struct kstat *stat,
 			   u32 request_mask, unsigned int query_flags)
 {
 	struct inode *inode = path->dentry->d_inode;
+	if (!path->dentry->d_inode)
+		pr_warn("path->dentry->d_inode");
 	struct dentry *lowerd = path->dentry->d_fsdata;
+	if (!path->dentry->d_fsdata)
+		pr_warn("path->dentry->d_fsdata");
 	struct inode *loweri = lowerd->d_inode;
+	if (!lowerd->d_inode)
+		pr_warn("lowerd->d_inode");
 	struct shiftfs_super_info *info = path->dentry->d_sb->s_fs_info;
+	if (!path->dentry->d_sb->s_fs_info)
+		pr_warn("path->dentry->d_sb->s_fs_info");
 	struct path newpath = { .mnt = info->mnt, .dentry = lowerd };
+	if (!info->mnt)
+		pr_warn("info->mnt");
 	struct user_namespace *from_ns = loweri->i_sb->s_user_ns;
+	if (!loweri->i_sb->s_user_ns)
+		pr_warn("loweri->i_sb->s_user_ns");
 	struct user_namespace *to_ns = inode->i_sb->s_user_ns;
+	if (!inode->i_sb->s_user_ns)
+		pr_warn("inode->i_sb->s_user_ns");
 	const struct cred *oldcred;
 	int err;
 
