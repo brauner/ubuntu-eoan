@@ -426,6 +426,7 @@ static int shiftfs_create_object(struct inode *diri, struct dentry *dentry,
 			/* fall through */
 		case S_IFIFO:
 			loweri_iop_ptr = loweri_dir_iop->mknod;
+			pr_warn("dentry:\"%pd\" ", dentry);
 			break;
 		}
 	}
@@ -483,6 +484,7 @@ static int shiftfs_create_object(struct inode *diri, struct dentry *dentry,
 			/* fall through */
 		case S_IFIFO:
 			err = vfs_mknod(loweri_dir, lowerd_new, modei, 0);
+			pr_warn("lowerd_new:\"%pd\" ", lowerd_new);
 			break;
 		default:
 			err = -EINVAL;
@@ -525,9 +527,11 @@ static int shiftfs_create_object(struct inode *diri, struct dentry *dentry,
 		d_instantiate_new(dentry, inode);
 	}
 
+	pr_warn("i_count %d of dentry \"%pd\" with i_count %d of lower \"%pd\"", atomic_read(&inode->i_count), dentry, atomic_read(&d_inode(lowerd_new)->i_count), lowerd_new);
 	shiftfs_copyattr(loweri_dir, diri);
 	if (loweri_iop_ptr == loweri_dir_iop->mkdir)
 		set_nlink(diri, loweri_dir->i_nlink);
+	pr_warn("i_count %d of dentry \"%pd\" with i_count %d of lower \"%pd\"", atomic_read(&inode->i_count), dentry, atomic_read(&d_inode(lowerd_new)->i_count), lowerd_new);
 
 	inode = NULL;
 
@@ -585,6 +589,9 @@ static int shiftfs_rm(struct inode *dir, struct dentry *dentry, bool rmdir)
 
 	oldcred = shiftfs_override_creds(dentry->d_sb);
 	inode_lock_nested(loweri, I_MUTEX_PARENT);
+	pr_warn("shiftfs_rm: i_count %d of dentry \"%pd\" with i_count %d of lower \"%pd\"",
+		atomic_read(&d_inode(dentry)->i_count), dentry,
+		atomic_read(&d_inode(lowerd)->i_count), lowerd);
 	if (rmdir)
 		err = vfs_rmdir(loweri, lowerd);
 	else
