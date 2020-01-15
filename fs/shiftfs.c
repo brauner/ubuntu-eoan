@@ -240,9 +240,6 @@ static int shiftfs_d_weak_revalidate(struct dentry *dentry, unsigned int flags)
 	int err = 1;
 	struct dentry *lowerd = dentry->d_fsdata;
 
-	if (d_is_negative(lowerd) != d_is_negative(dentry))
-		return 0;
-
 	if ((lowerd->d_flags & DCACHE_OP_WEAK_REVALIDATE))
 		err = lowerd->d_op->d_weak_revalidate(lowerd, flags);
 
@@ -263,23 +260,24 @@ static int shiftfs_d_revalidate(struct dentry *dentry, unsigned int flags)
 	int err = 1;
 	struct dentry *lowerd = dentry->d_fsdata;
 
-	if (d_unhashed(lowerd) ||
-	    ((d_is_negative(lowerd) != d_is_negative(dentry))))
-		return 0;
-
 	if (flags & LOOKUP_RCU)
 		return -ECHILD;
 
-	if ((lowerd->d_flags & DCACHE_OP_REVALIDATE))
+	if ((lowerd->d_flags & DCACHE_OP_REVALIDATE)) {
 		err = lowerd->d_op->d_revalidate(lowerd, flags);
+		if (err < 0)
+			return err;
+		if (!err) {
+			d_invalidate(lowerd);
+			return -ESTALE;
+		}
+	}
 
 	if (d_really_is_positive(dentry)) {
 		struct inode *inode = d_inode(dentry);
 		struct inode *loweri = d_inode(lowerd);
 
 		shiftfs_copyattr(loweri, inode);
-		if (!inode->i_nlink)
-			err = 0;
 	}
 
 	return err;
