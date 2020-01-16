@@ -39,6 +39,9 @@ static struct file *ovl_open_realfile(const struct file *file,
 	pr_debug("open(%p[%pD2/%c], 0%o) -> (%p, 0%o)\n",
 		 file, file, ovl_whatisit(inode, realinode), file->f_flags,
 		 realfile, IS_ERR(realfile) ? 0 : realfile->f_flags);
+	pr_warn("ovl_open_realfile: i_count %d of dentry \"%pd2\" with i_count %d of lower \"%pd2\"",
+		atomic_read(&file_inode(file)->i_count), file->f_path.dentry,
+		atomic_read(&d_inode(realpath.dentry)->i_count), realpath.dentry);
 
 	return realfile;
 }
