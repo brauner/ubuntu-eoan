@@ -1069,6 +1069,9 @@ static struct file *shiftfs_open_realfile(const struct file *file,
 	realfile = open_with_fake_path(&realpath, file->f_flags, realinode,
 				       info->creator_cred);
 	revert_creds(old_cred);
+	pr_warn("shiftfs_open_realfile: i_count %d of dentry \"%pd\" with i_count %d of lower \"%pd\"",
+		atomic_read(&file_inode(file)->i_count), file->f_path.dentry,
+		atomic_read(&d_inode(lowerd)->i_count), lowerd);
 
 	return realfile;
 }
