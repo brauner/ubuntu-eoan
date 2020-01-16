@@ -673,9 +673,18 @@ static struct dentry *shiftfs_lookup(struct inode *dir, struct dentry *dentry,
 
 	dentry->d_fsdata = new;
 
-	newi = new->d_inode;
-	if (!newi)
-		goto out;
+	/*
+	 * negative dentry can go positive under us here - its parent is not
+	 * locked.  That's OK and that could happen just as we return from
+	 * shiftfs_lookup() anyway.  Just need to be careful and fetch
+	 * ->d_inode only once - it's not stable here.
+	 */
+	newi = READ_ONCE(new->d_inode);
+	if (!newi) {
+		/* We want to add because we couldn't find in lower. */
+		d_add(dentry, NULL);
+		return NULL;
+	}
 
 	inode = iget5_locked(dentry->d_sb, (unsigned long)newi,
 			     shiftfs_inode_test, shiftfs_inode_set, newi);
