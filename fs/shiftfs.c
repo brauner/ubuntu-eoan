@@ -312,12 +312,15 @@ static const char *shiftfs_get_link(struct dentry *dentry, struct inode *inode,
 }
 
 static int shiftfs_setxattr(struct dentry *dentry, struct inode *inode,
-			    const char *name, const void *value,
-			    size_t size, int flags)
+			    const char *name, const void *value, size_t size,
+			    int flags)
 {
 	struct dentry *lowerd = dentry->d_fsdata;
 	int err;
 	const struct cred *oldcred;
+
+	if (!(d_inode(lowerd)->i_opflags & IOP_XATTR))
+		return -EOPNOTSUPP;
 
 	oldcred = shiftfs_override_creds(dentry->d_sb);
 	err = vfs_setxattr(lowerd, name, value, size, flags);
@@ -336,6 +339,9 @@ static int shiftfs_xattr_get(const struct xattr_handler *handler,
 	int err;
 	const struct cred *oldcred;
 
+	if (!(d_inode(lowerd)->i_opflags & IOP_XATTR))
+		return -EOPNOTSUPP;
+
 	oldcred = shiftfs_override_creds(dentry->d_sb);
 	err = vfs_getxattr(lowerd, name, value, size);
 	revert_creds(oldcred);
@@ -350,6 +356,9 @@ static ssize_t shiftfs_listxattr(struct dentry *dentry, char *list,
 	int err;
 	const struct cred *oldcred;
 
+	if (!(d_inode(lowerd)->i_opflags & IOP_XATTR))
+		return -EOPNOTSUPP;
+
 	oldcred = shiftfs_override_creds(dentry->d_sb);
 	err = vfs_listxattr(lowerd, list, size);
 	revert_creds(oldcred);
@@ -362,6 +371,9 @@ static int shiftfs_removexattr(struct dentry *dentry, const char *name)
 	struct dentry *lowerd = dentry->d_fsdata;
 	int err;
 	const struct cred *oldcred;
+
+	if (!(d_inode(lowerd)->i_opflags & IOP_XATTR))
+		return -EOPNOTSUPP;
 
 	oldcred = shiftfs_override_creds(dentry->d_sb);
 	err = vfs_removexattr(lowerd, name);
