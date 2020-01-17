@@ -683,14 +683,11 @@ static struct dentry *shiftfs_lookup(struct inode *dir, struct dentry *dentry,
 	struct inode *newi;
 	const struct cred *oldcred;
 	struct dentry *lowerd = dentry->d_parent->d_fsdata;
-	struct inode *inode = NULL, *loweri = lowerd->d_inode;
+	struct inode *inode = NULL;
 
-	inode_lock(loweri);
 	oldcred = shiftfs_override_creds(dentry->d_sb);
-	new = lookup_one_len(dentry->d_name.name, lowerd, dentry->d_name.len);
+	new = lookup_one_len_unlocked(dentry->d_name.name, lowerd, dentry->d_name.len);
 	revert_creds(oldcred);
-	inode_unlock(loweri);
-
 	if (IS_ERR(new))
 		return new;
 
