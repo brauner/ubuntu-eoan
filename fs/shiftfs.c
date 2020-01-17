@@ -633,8 +633,22 @@ static int shiftfs_rename(struct inode *olddir, struct dentry *old,
 
 	trapd = lock_rename(lowerd_dir_new, lowerd_dir_old);
 
-	if (trapd == lowerd_old || trapd == lowerd_new)
+	if (lowerd_old->d_parent != lower_dir_old)
 		goto out_unlock;
+
+	if (lowerd_new->d_parent != lower_dir_new)
+		goto out_unlock;
+
+        if (d_unhashed(lowerd_old) || d_unhashed(lowerd_new))
+		goto out_unlock;
+
+	if (trapd == lowerd_old)
+		goto out_unlock;
+
+	if (trapd == lowerd_new) {
+		err = -ENOTEMPTY;
+		goto out_unlock;
+	}
 
 	oldcred = shiftfs_override_creds(old->d_sb);
 	err = vfs_rename(loweri_dir_old, lowerd_old, loweri_dir_new, lowerd_new,
